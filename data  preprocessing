@@ -1,0 +1,47 @@
+pip install pandas scikit-learn matplotlib seaborn jupyter
+import pandas as pd
+
+df = pd.read_csv('hotel_bookings.csv')
+df.head()
+df.info()
+df.isnull().sum() 
+
+import pandas as pd
+
+df = pd.read_csv("hotel_bookings.csv")
+
+df['company'] = df['company'].fillna(0)
+df['agent'] = df['agent'].fillna(0)
+df['children'] = df['children'].fillna(0)
+
+
+df['total_stay'] = (
+    df['stays_in_weekend_nights']
+    + df['stays_in_week_nights']
+)
+
+df['is_cancelled'] = df['is_canceled']
+
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+features = df[['lead_time', 'total_stay', 'adr', 'previous_cancellations']]
+scaled = StandardScaler().fit_transform(features)
+
+kmeans = KMeans(n_clusters=4, random_state=42)
+df['segment'] = kmeans.fit_predict(scaled)
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+X = df[['lead_time', 'total_stay', 'adr', 'previous_cancellations']]
+y = df['is_cancelled']  # 1 = churned/cancelled, 0 = retained
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+preds = model.predict(X_test)
+
+print(classification_report(y_test, preds))
